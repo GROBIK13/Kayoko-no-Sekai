@@ -268,3 +268,17 @@ footer {
         grid-template-columns: 1fr;
     }
 }
+.kayoko-between {
+    display: flex;
+    justify-content: center;
+    padding: 20px 20px 50px;
+}
+
+.kayoko-between img {
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+    border-radius: 25px;
+    display: block;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
