@@ -8,6 +8,10 @@
     <title>Коллекция Каёко</title>
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
             font-family: Arial, sans-serif;
@@ -50,9 +54,13 @@
             cursor: pointer;
         }
 
+        .open-button:hover {
+            background: #b5ddff;
+        }
+
         .current {
             max-width: 500px;
-            margin: auto;
+            margin: 0 auto 35px;
             padding: 20px;
             background: white;
             border-radius: 25px;
@@ -62,20 +70,24 @@
 
         .current img {
             width: 100%;
+            max-height: 500px;
+            object-fit: contain;
             border-radius: 20px;
         }
 
         .hidden {
-            display: none;
+            display: none !important;
         }
 
         .collection {
             max-width: 1000px;
             margin: 40px auto;
             padding: 20px;
-
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: repeat(
+                auto-fit,
+                minmax(150px, 1fr)
+            );
             gap: 18px;
         }
 
@@ -85,20 +97,30 @@
             border-radius: 20px;
             text-align: center;
             box-shadow: 0 7px 20px rgba(50, 120, 160, 0.12);
+            min-width: 0;
         }
 
         .card img {
+            display: block;
             width: 100%;
             aspect-ratio: 1 / 1;
             object-fit: cover;
             border-radius: 15px;
         }
 
+        .card:not(.locked) {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .card:not(.locked):hover {
+            transform: translateY(-4px);
+        }
+
         .locked {
             background: #d5d5d5;
             color: #777;
             min-height: 180px;
-
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -120,305 +142,456 @@
             border: none;
             border-radius: 12px;
             cursor: pointer;
+            background: white;
+            color: #31566d;
+        }
+
+        /* Затемнение фона при просмотре карточки */
+
+        .card-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(20, 35, 50, 0.72);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .card-modal {
+            position: relative;
+            width: min(500px, 100%);
+            max-height: 90vh;
+            overflow-y: auto;
+            background: white;
+            border-radius: 25px;
+            padding: 22px;
+            text-align: center;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-modal img {
+            display: block;
+            width: 100%;
+            max-height: 55vh;
+            object-fit: contain;
+            border-radius: 18px;
+        }
+
+        .close-card {
+            position: sticky;
+            float: right;
+            top: 0;
+            margin: -10px -10px 0 0;
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            background: #eef7ff;
+            color: #31566d;
+            font-size: 25px;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .modal-text {
+            clear: both;
+            padding-top: 5px;
+        }
+
+        @media (max-width: 400px) {
+            .collection {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 12px;
+                padding: 12px;
+            }
+
+            .card {
+                padding: 8px;
+            }
+
+            .card-modal {
+                padding: 16px;
+            }
         }
     </style>
 </head>
 
 <body>
 
-<header>
+    <header>
+        <a href="index.html" class="back">
+            ← На главную
+        </a>
 
-    <a href="index.html" class="back">
-        ← На главную
-    </a>
+        <h1>💙 Коллекция Каёко</h1>
 
-    <h1>💙 Коллекция Каёко</h1>
+        <p class="counter" id="counter">
+            Открыто: 0 / 10
+        </p>
+    </header>
 
-    <p class="counter" id="counter">
-        Открыто: 0 / 11
-    </p>
+    <button class="open-button" id="openButton">
+        🎁 Открыть фотографию
+    </button>
 
-</header>
+    <div id="current" class="current hidden">
+        <img id="currentImage" src="" alt="Каёко">
 
+        <h2 id="currentTitle"></h2>
+        <p id="currentRarity"></p>
+        <p id="currentDescription"></p>
+    </div>
 
-<button class="open-button" id="openButton">
-    🎁 Открыть фотографию
-</button>
+    <h2 style="text-align:center;">
+        Моя коллекция
+    </h2>
 
+    <div class="collection" id="collection"></div>
 
-<div id="current" class="current hidden">
+    <!-- Окно увеличенной карточки -->
 
-    <img id="currentImage" src="" alt="Каёко">
+    <div class="card-overlay" id="cardOverlay">
 
-    <h2 id="currentTitle"></h2>
+        <div class="card-modal">
 
-    <p id="currentRarity"></p>
+            <button
+                class="close-card"
+                id="closeCard"
+                aria-label="Закрыть карточку"
+            >
+                ✕
+            </button>
 
-    <p id="currentDescription"></p>
+            <div class="modal-text">
+                <img id="modalImage" src="" alt="Каёко">
 
-</div>
+                <h2 id="modalTitle"></h2>
+                <p id="modalRarity"></p>
+                <p id="modalDescription"></p>
+            </div>
 
+        </div>
 
-<h2 style="text-align:center;">
-    Моя коллекция
-</h2>
+    </div>
 
+    <button class="reset" id="resetButton">
+        Сбросить коллекцию
+    </button>
 
-<div class="collection" id="collection"></div>
-
-
-<button class="reset" id="resetButton">
-    Сбросить коллекцию
-</button>
-
-
-<script>
-
-const photos = [
-
-    {
-        id: "park",
-        title: "Каёко в парке",
-        rarity: "🔵 Редкая",
-        description: "Небольшая прогулка после занятий.",
-        image: "kayoko-park.jpg"
-    },
-
-    {
-        id: "cafe",
-        title: "Каёко в кафе",
-        rarity: "⚪ Обычная",
-        description: "Каёко сидит у окна любимого кафе.",
-        image: "kayoko-cafe.jpg"
-    },
-
-    {
-        id: "tokyo",
-        title: "Прогулка по Токио",
-        rarity: "🟣 Эпическая",
-        description: "Вечерняя прогулка по улицам Токио.",
-        image: "kayoko-tokyo.jpg"
-    },
-
-    {
-        id: "window",
-        title: "Каёко у окна",
-        rarity: "🔵 Редкая",
-        description: "Тихий вечер дома.",
-        image: "kayoko-window.jpg"
-    },
-
-    {
-        id: "music",
-        title: "Каёко и музыка",
-        rarity: "⚪ Обычная",
-        description: "Любимая музыка и немного отдыха.",
-        image: "kayoko-music.jpg"
-    },
-
-    {
-        id: "sunset",
-        title: "Каёко на закате",
-        rarity: "🟣 Эпическая",
-        description: "Красивый вечерний закат.",
-        image: "kayoko-sunset.jpg"
-    },
-
-    {
-        id: "class",
-        title: "Каёко в классе",
-        rarity: "⚪ Обычная",
-        description: "Обычный день в академии Мидзухана.",
-        image: "kayoko-class.jpg"
-    },
-
-    {
-        id: "rain",
-        title: "Каёко под дождём",
-        rarity: "🔵 Редкая",
-        description: "Небольшая прогулка под дождём.",
-        image: "kayoko-rain.jpg"
-    },
-
-    {
-        id: "night",
-        title: "Каёко ночью",
-        rarity: "🟡 Легендарная",
-        description: "Тихий Токио поздним вечером.",
-        image: "kayoko-night.jpg"
-    },
-
-    {
-        id: "sea",
-        title: "Каёко на море",
-        rarity: "🟣 Эпическая",
-        description: "День у моря.",
-        image: "kayoko-sea.jpg"
-    },
-
-    {
-        id: "secret",
-        title: "Секретная фотография",
-        rarity: "🌈 Секретная",
-        description: "Каёко нашла маленького котёнка и осторожно его погладила. 🐱",
-        image: "kayoko-secret.jpg"
-    }
-
-];
-
-
-let opened = JSON.parse(
-    localStorage.getItem("kayokoCollection") || "[]"
-);
-
-
-const collection = document.getElementById("collection");
-const counter = document.getElementById("counter");
-const current = document.getElementById("current");
-
-
-function save() {
-
-    localStorage.setItem(
-        "kayokoCollection",
-        JSON.stringify(opened)
-    );
-
-}
-
-
-function render() {
-
-    collection.innerHTML = "";
-
-    photos.forEach(photo => {
-
-        const card = document.createElement("div");
-
-        card.className = "card";
-
-        if (opened.includes(photo.id)) {
-
-            card.innerHTML = `
-                <img src="${photo.image}" alt="${photo.title}">
-                <h3>${photo.title}</h3>
-                <p>${photo.rarity}</p>
-            `;
-
-            if (photo.id === "secret") {
-                card.classList.add("secret");
+    <script>
+        const photos = [
+            {
+                id: "cafe",
+                title: "Каёко в кафе",
+                rarity: "⚪ Обычная",
+                rarityKey: "common",
+                description: "Каёко сидит у окна любимого кафе.",
+                image: "kayoko-cafe.jpg"
+            },
+            {
+                id: "class",
+                title: "Каёко в классе",
+                rarity: "⚪ Обычная",
+                rarityKey: "common",
+                description: "Обычный день в академии Мидзухана.",
+                image: "kayoko-class.jpg"
+            },
+            {
+                id: "music",
+                title: "Каёко и музыка",
+                rarity: "⚪ Обычная",
+                rarityKey: "common",
+                description: "Любимая музыка и немного отдыха.",
+                image: "kayoko-music.jpg"
+            },
+            {
+                id: "tokyo",
+                title: "Прогулка по Токио",
+                rarity: "🟣 Эпическая",
+                rarityKey: "epic",
+                description: "Вечерняя прогулка по улицам Токио.",
+                image: "kayoko-tokyo.jpg"
+            },
+            {
+                id: "sunset",
+                title: "Каёко на закате",
+                rarity: "🟣 Эпическая",
+                rarityKey: "epic",
+                description: "Красивый вечерний закат.",
+                image: "kayoko-sunset.jpg"
+            },
+            {
+                id: "sea",
+                title: "Каёко на море",
+                rarity: "🟣 Эпическая",
+                rarityKey: "epic",
+                description: "День у моря.",
+                image: "kayoko-sea.jpg"
+            },
+            {
+                id: "window",
+                title: "Каёко у окна",
+                rarity: "🔵 Редкая",
+                rarityKey: "rare",
+                description: "Тихий вечер дома.",
+                image: "kayoko-window.jpg"
+            },
+            {
+                id: "rain",
+                title: "Каёко под дождём",
+                rarity: "🔵 Редкая",
+                rarityKey: "rare",
+                description: "Небольшая прогулка под дождём.",
+                image: "kayoko-rain.jpg"
+            },
+            {
+                id: "night",
+                title: "Каёко ночью",
+                rarity: "🟡 Легендарная",
+                rarityKey: "legendary",
+                description: "Тихий Токио поздним вечером.",
+                image: "kayoko-night.jpg"
+            },
+            {
+                id: "secret",
+                title: "Секретная фотография",
+                rarity: "🌈 Секретная",
+                rarityKey: "secret",
+                description: "Каёко нашла маленького котёнка и осторожно его погладила. 🐱",
+                image: "kayoko-secret.jpg"
             }
+        ];
 
-        } else {
+        /*
+          Шансы по редкости:
+          Обычная — 50%
+          Редкая — 30%
+          Эпическая — 15%
+          Легендарная — 4%
+          Секретная — 0.7%
 
-            card.classList.add("locked");
+          Сумма весов — 99.7.
+          Это приблизительные шансы за одно открытие.
+        */
 
-            card.innerHTML = `
-                <div class="lock">🔒</div>
-                <h3>???</h3>
-                <p>Не открыто</p>
-            `;
+        const rarityWeights = {
+            common: 50,
+            rare: 30,
+            epic: 15,
+            legendary: 4,
+            secret: 0.7
+        };
 
+        const collection = document.getElementById("collection");
+        const counter = document.getElementById("counter");
+        const current = document.getElementById("current");
+
+        const overlay = document.getElementById("cardOverlay");
+        const modalImage = document.getElementById("modalImage");
+        const modalTitle = document.getElementById("modalTitle");
+        const modalRarity = document.getElementById("modalRarity");
+        const modalDescription = document.getElementById("modalDescription");
+
+        function loadOpened() {
+            try {
+                const saved = JSON.parse(
+                    localStorage.getItem("kayokoCollection") || "[]"
+                );
+
+                if (!Array.isArray(saved)) {
+                    return [];
+                }
+
+                return saved.filter(id =>
+                    photos.some(photo => photo.id === id)
+                );
+            } catch (error) {
+                return [];
+            }
         }
 
-        collection.appendChild(card);
+        let opened = loadOpened();
+        let lastPhotoId = null;
 
-    });
+        function save() {
+            try {
+                localStorage.setItem(
+                    "kayokoCollection",
+                    JSON.stringify(opened)
+                );
+            } catch (error) {
+                console.warn("Не удалось сохранить коллекцию.", error);
+            }
+        }
 
+        function render() {
+            collection.innerHTML = "";
 
-    counter.textContent =
-        "Открыто: " + opened.length + " / " + photos.length;
+            photos.forEach(photo => {
+                const card = document.createElement("div");
+                card.className = "card";
 
-}
+                if (opened.includes(photo.id)) {
+                    card.innerHTML = `
+                        <img src="${photo.image}" alt="${photo.title}">
+                        <h3>${photo.title}</h3>
+                        <p>${photo.rarity}</p>
+                    `;
 
+                    if (photo.id === "secret") {
+                        card.classList.add("secret");
+                    }
 
-document.getElementById("openButton").onclick = function() {
+                    card.addEventListener("click", () => {
+                        openCard(photo);
+                    });
+                } else {
+                    card.classList.add("locked");
 
-    const normalPhotos = photos.filter(
-        photo =>
-            photo.id !== "secret" &&
-            !opened.includes(photo.id)
-    );
+                    card.innerHTML = `
+                        <div class="lock">🔒</div>
+                        <h3>???</h3>
+                        <p>Не открыто</p>
+                    `;
+                }
 
+                collection.appendChild(card);
+            });
 
-    if (normalPhotos.length > 0) {
+            counter.textContent =
+                "Открыто: " + opened.length + " / " + photos.length;
+        }
 
-        const photo =
-            normalPhotos[
-                Math.floor(Math.random() * normalPhotos.length)
-            ];
+        function choosePhoto() {
+            const availablePhotos = photos.filter(
+                photo => photo.id !== lastPhotoId
+            );
 
-        opened.push(photo.id);
+            if (availablePhotos.length === 0) {
+                return null;
+            }
 
-        showPhoto(photo);
+            /*
+              Делим вес каждой редкости между фотографиями
+              этой редкости, чтобы редкость определяла шанс.
+            */
 
-        save();
+            const rarityCounts = {};
+
+            availablePhotos.forEach(photo => {
+                rarityCounts[photo.rarityKey] =
+                    (rarityCounts[photo.rarityKey] || 0) + 1;
+            });
+
+            const weightedPhotos = availablePhotos.map(photo => ({
+                photo,
+                weight:
+                    rarityWeights[photo.rarityKey] /
+                    rarityCounts[photo.rarityKey]
+            }));
+
+            const totalWeight = weightedPhotos.reduce(
+                (sum, item) => sum + item.weight,
+                0
+            );
+
+            let random = Math.random() * totalWeight;
+
+            for (const item of weightedPhotos) {
+                random -= item.weight;
+
+                if (random < 0) {
+                    return item.photo;
+                }
+            }
+
+            return weightedPhotos[weightedPhotos.length - 1].photo;
+        }
+
+        function showPhoto(photo) {
+            current.classList.remove("hidden");
+
+            document.getElementById("currentImage").src = photo.image;
+            document.getElementById("currentTitle").textContent = photo.title;
+            document.getElementById("currentRarity").textContent = photo.rarity;
+            document.getElementById("currentDescription").textContent =
+                photo.description;
+
+            /*
+              Повторная карточка показывается снова,
+              но счётчик коллекции увеличивается только впервые.
+            */
+
+            if (!opened.includes(photo.id)) {
+                opened.push(photo.id);
+                save();
+                render();
+            }
+        }
+
+        function openCard(photo) {
+            modalImage.src = photo.image;
+            modalTitle.textContent = photo.title;
+            modalRarity.textContent = photo.rarity;
+            modalDescription.textContent = photo.description;
+
+            overlay.style.display = "flex";
+        }
+
+        function closeCard() {
+            overlay.style.display = "none";
+        }
+
+        document.getElementById("openButton").addEventListener(
+            "click",
+            () => {
+                const photo = choosePhoto();
+
+                if (!photo) {
+                    return;
+                }
+
+                lastPhotoId = photo.id;
+                showPhoto(photo);
+            }
+        );
+
+        document.getElementById("closeCard").addEventListener(
+            "click",
+            closeCard
+        );
+
+        overlay.addEventListener("click", event => {
+            if (event.target === overlay) {
+                closeCard();
+            }
+        });
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "Escape") {
+                closeCard();
+            }
+        });
+
+        document.getElementById("resetButton").addEventListener(
+            "click",
+            () => {
+                if (confirm("Сбросить всю коллекцию?")) {
+                    opened = [];
+                    lastPhotoId = null;
+                    save();
+
+                    current.classList.add("hidden");
+                    closeCard();
+                    render();
+                }
+            }
+        );
+
         render();
-
-        return;
-    }
-
-
-    if (!opened.includes("secret")) {
-
-        const secret =
-            photos.find(photo => photo.id === "secret");
-
-        opened.push("secret");
-
-        showPhoto(secret);
-
-        save();
-        render();
-
-        return;
-    }
-
-
-    alert("🎉 Ты собрал всю коллекцию Каёко!");
-
-};
-
-
-function showPhoto(photo) {
-
-    current.classList.remove("hidden");
-
-    document.getElementById("currentImage").src =
-        photo.image;
-
-    document.getElementById("currentTitle").textContent =
-        photo.title;
-
-    document.getElementById("currentRarity").textContent =
-        photo.rarity;
-
-    document.getElementById("currentDescription").textContent =
-        photo.description;
-
-}
-
-
-document.getElementById("resetButton").onclick = function() {
-
-    if (confirm("Сбросить всю коллекцию?")) {
-
-        opened = [];
-
-        save();
-
-        current.classList.add("hidden");
-
-        render();
-
-    }
-
-};
-
-
-render();
-
-</script>
+    </script>
 
 </body>
 </html>
