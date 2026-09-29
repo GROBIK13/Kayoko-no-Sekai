@@ -404,3 +404,12 @@ footer {
         font-size: 15px;
     }
 }
+/* Скрытие приветствия */
+.chibi-message.hide {
+    display: none;
+}
+
+/* Показ сообщения "Хватит!" */
+.chibi-angry-message.show {
+    display: block;
+}
