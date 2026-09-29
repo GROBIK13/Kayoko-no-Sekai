@@ -27,7 +27,7 @@
         <div class="hero-content">
 
             <img
-                src="images/E3E25499-A896-4B10-A555-02C497F418E4.png"
+                src="kayoko-photo.PNG"
                 alt="Судзуко Каёко"
                 class="kayoko-photo"
             >
@@ -74,7 +74,7 @@
 
         <img
             id="chibiImage"
-            src="images/kayoko-chibi-happy.PNG"
+            src="kayoko-chibi-happy.PNG"
             alt="Чиби Каёко"
         >
 
@@ -88,7 +88,7 @@
     <div style="text-align: center; margin: 25px;">
 
         <a href="gallery.html" class="gallery-button">
-            </h2>Коллекция Каёко</h2>
+            💙 Коллекция Каёко
         </a>
 
     </div>
@@ -130,7 +130,7 @@
     <div class="kayoko-between">
 
         <img
-            src="images/kayoko-photo.PNG"
+            src="kayoko-photo.PNG"
             alt="Судзуко Каёко"
         >
 
@@ -256,7 +256,7 @@
 
         /* Приветствие исчезает через 5 секунд */
 
-        setTimeout(() => {
+        setTimeout(function () {
 
             welcomeMessage.classList.add("hide");
 
@@ -265,11 +265,11 @@
 
         /* Обычный клик */
 
-        chibi.addEventListener("click", () => {
+        chibi.addEventListener("click", function () {
 
             chibi.classList.add("click-animation");
 
-            setTimeout(() => {
+            setTimeout(function () {
 
                 chibi.classList.remove("click-animation");
 
@@ -280,30 +280,26 @@
 
         /* Двойной клик */
 
-        chibi.addEventListener("dblclick", () => {
+        chibi.addEventListener("dblclick", function () {
 
-            /* Меняем Каёко на сердитую */
+            /* Сердитая Каёко */
 
-            chibiImage.src =
-                "images/kayoko-chibi-angry.PNG";
-
+            chibiImage.src = "kayoko-chibi-angry.PNG";
 
             /* Показываем сообщение */
 
             angryMessage.classList.add("show");
 
-
-            /* Добавляем анимацию злости */
+            /* Анимация злости */
 
             chibi.classList.add("angry");
 
 
-            /* Через 3 секунды возвращаем обычную Каёко */
+            /* Возвращаем обычную Каёко через 3 секунды */
 
-            setTimeout(() => {
+            setTimeout(function () {
 
-                chibiImage.src =
-                    "images/kayoko-chibi-happy.PNG";
+                chibiImage.src = "kayoko-chibi-happy.PNG";
 
                 angryMessage.classList.remove("show");
 
