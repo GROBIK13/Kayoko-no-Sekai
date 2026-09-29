@@ -12,7 +12,10 @@
 
 <body>
 
-    <!-- Главный экран -->
+    <!-- =====================================
+         ГЛАВНЫЙ ЭКРАН
+    ====================================== -->
+
     <header class="hero">
 
         <nav>
@@ -21,13 +24,15 @@
             <a href="#life">Жизнь</a>
         </nav>
 
+
         <div class="hero-content">
 
             <img
                 src="images/E3E25499-A896-4B10-A555-02C497F418E4.png"
                 alt="Судзуко Каёко"
-                class="Kayoko-photo.jpg"
+                class="kayoko-photo"
             >
+
 
             <div class="hero-text">
 
@@ -54,27 +59,99 @@
 
     </header>
 
-    <div style="text-align: center; margin: 25px;">
-        <a href="gallery.html" class="gallery-button">
+
+
+    <!-- =====================================
+         ЧИБИ-КАЁКО
+    ====================================== -->
+
+    <div
+        class="chibi-kayoko"
+        id="chibiKayoko"
+    >
+
+        <!-- Приветственное сообщение -->
+
+        <div
+            class="chibi-message"
+            id="chibiMessage"
+        >
+            Привет! 💙<br>
+            Добро пожаловать<br>
+            на мой сайт!
+        </div>
+
+
+        <!-- Картинка Каёко -->
+
+        <img
+            id="chibiImage"
+            src="images/kayoko-chibi-happy.png"
+            alt="Чиби Каёко"
+        >
+
+
+        <!-- Сообщение после двойного нажатия -->
+
+        <div
+            class="chibi-angry-message"
+            id="chibiAngryMessage"
+        >
+            Хватит! 😤
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================
+         КОЛЛЕКЦИЯ
+    ====================================== -->
+
+    <div
+        style="
+            text-align: center;
+            margin: 25px;
+        "
+    >
+
+        <a
+            href="gallery.html"
+            class="gallery-button"
+        >
             💙 Коллекция Каёко
         </a>
-    </div>
-    
-    <!-- О Каёко -->
-    <section id="about" class="section">
 
-        <h2>💙 О Каёко</h2>
+    </div>
+
+
+
+    <!-- =====================================
+         О КАЁКО
+    ====================================== -->
+
+    <section
+        id="about"
+        class="section"
+    >
+
+        <h2>
+            💙 О Каёко
+        </h2>
+
 
         <p>
             Судзуко Каёко — восемнадцатилетняя девушка,
             живущая и учащаяся в Токио, в академии Мидзухана.
         </p>
 
+
         <p>
             У Каёко белые волосы и голубые глаза.
             У неё добрый и задумчивый взгляд, особенно когда
             она чем-то заинтересована или с кем-то разговаривает.
         </p>
+
 
         <p>
             После школы она любит гулять по Токио,
@@ -84,69 +161,116 @@
 
     </section>
 
-    <!-- Фото Каёко -->
+
+
+    <!-- =====================================
+         ФОТО КАЁКО
+    ====================================== -->
+
     <div class="kayoko-between">
+
         <img
-            src="E3E25499-A896-4B10-A555-02C497F418E4.png"
+            src="images/E3E25499-A896-4B10-A555-02C497F418E4.png"
             alt="Судзуко Каёко"
         >
-    </div>
-    <!-- Характер -->
-    <section id="personality" class="section">
 
-        <h2>🌸 Характер</h2>
+    </div>
+
+
+
+    <!-- =====================================
+         ХАРАКТЕР
+    ====================================== -->
+
+    <section
+        id="personality"
+        class="section"
+    >
+
+        <h2>
+            🌸 Характер
+        </h2>
+
 
         <div class="cards">
 
+
             <div class="card">
-                <h3>Спокойная</h3>
+
+                <h3>
+                    Спокойная
+                </h3>
 
                 <p>
                     Каёко не любит ненужные конфликты
                     и предпочитает решать проблемы спокойно.
                 </p>
+
             </div>
 
 
+
             <div class="card">
-                <h3>Добрая</h3>
+
+                <h3>
+                    Добрая
+                </h3>
 
                 <p>
                     Она внимательно относится к друзьям
                     и старается помогать окружающим.
                 </p>
+
             </div>
 
 
+
             <div class="card">
-                <h3>Любопытная</h3>
+
+                <h3>
+                    Любопытная
+                </h3>
 
                 <p>
                     Каёко любит исследовать новые улицы,
                     кафе и интересные места Токио.
                 </p>
+
             </div>
+
 
         </div>
 
     </section>
 
 
-    <!-- Жизнь -->
-    <section id="life" class="section">
 
-        <h2>🌃 Повседневная жизнь</h2>
+    <!-- =====================================
+         ПОВСЕДНЕВНАЯ ЖИЗНЬ
+    ====================================== -->
+
+    <section
+        id="life"
+        class="section"
+    >
+
+        <h2>
+            🌃 Повседневная жизнь
+        </h2>
+
 
         <p>
             После занятий Каёко часто встречается
             с подругами в небольшом кафе.
         </p>
 
+
         <p>
             Иногда она приходит туда одна,
             садится у окна, включает музыку
             и просто отдыхает после школы.
         </p>
+
 
         <p>
             А ещё Каёко очень любит котят 🐱.
@@ -156,7 +280,11 @@
     </section>
 
 
-    <!-- Подвал -->
+
+    <!-- =====================================
+         ПОДВАЛ
+    ====================================== -->
+
     <footer>
 
         <p>
@@ -168,6 +296,222 @@
         </p>
 
     </footer>
+
+
+
+    <!-- =====================================
+         JAVASCRIPT ЧИБИ-КАЁКО
+    ====================================== -->
+
+    <script>
+
+        const chibi =
+            document.getElementById("chibiKayoko");
+
+        const chibiImage =
+            document.getElementById("chibiImage");
+
+        const chibiMessage =
+            document.getElementById("chibiMessage");
+
+        const angryMessage =
+            document.getElementById("chibiAngryMessage");
+
+
+        /*
+         * Пути к изображениям
+         */
+
+        const happyImage =
+            "images/kayoko-chibi-happy.png";
+
+        const angryImage =
+            "images/kayoko-chibi-angry.png";
+
+
+        /*
+         * Переменные для двойного нажатия
+         */
+
+        let clicks = 0;
+
+        let clickTimer = null;
+
+        let angryMode = false;
+
+
+
+        /* =====================================
+           ПРИВЕТСТВИЕ
+        ====================================== */
+
+        setTimeout(() => {
+
+            chibiMessage.style.opacity = "0";
+
+            chibiMessage.style.transition =
+                "opacity 0.5s ease";
+
+
+            setTimeout(() => {
+
+                chibiMessage.style.display =
+                    "none";
+
+            }, 500);
+
+        }, 5000);
+
+
+
+        /* =====================================
+           НАЖАТИЕ НА КАЁКО
+        ====================================== */
+
+        chibi.addEventListener(
+            "click",
+            () => {
+
+
+                /*
+                 * Если Каёко сердится,
+                 * новые нажатия ничего не делают.
+                 */
+
+                if (angryMode) {
+                    return;
+                }
+
+
+                clicks++;
+
+
+
+                /*
+                 * Небольшое уменьшение
+                 * при каждом нажатии.
+                 */
+
+                chibiImage.style.transform =
+                    "scale(0.92)";
+
+
+                setTimeout(() => {
+
+                    if (!angryMode) {
+
+                        chibiImage.style.transform =
+                            "scale(1)";
+
+                    }
+
+                }, 150);
+
+
+
+                /*
+                 * Ожидаем второе нажатие.
+                 */
+
+                clearTimeout(clickTimer);
+
+
+                clickTimer = setTimeout(() => {
+
+                    clicks = 0;
+
+                }, 450);
+
+
+
+                /* =================================
+                   ДВОЙНОЕ НАЖАТИЕ
+                ================================= */
+
+                if (clicks === 2) {
+
+
+                    clicks = 0;
+
+                    angryMode = true;
+
+
+
+                    /*
+                     * Меняем изображение
+                     */
+
+                    chibiImage.src =
+                        angryImage;
+
+
+
+                    /*
+                     * Показываем сообщение
+                     */
+
+                    angryMessage.style.display =
+                        "block";
+
+
+
+                    /*
+                     * Запускаем сердитую
+                     * анимацию.
+                     */
+
+                    chibiImage.classList.remove(
+                        "chibi-angry"
+                    );
+
+
+                    void chibiImage.offsetWidth;
+
+
+                    chibiImage.classList.add(
+                        "chibi-angry"
+                    );
+
+
+
+                    /*
+                     * Через 3 секунды
+                     * возвращаем обычную Каёко.
+                     */
+
+                    setTimeout(() => {
+
+
+                        chibiImage.src =
+                            happyImage;
+
+
+                        angryMessage.style.display =
+                            "none";
+
+
+                        chibiImage.classList.remove(
+                            "chibi-angry"
+                        );
+
+
+                        chibiImage.style.transform =
+                            "scale(1)";
+
+
+                        angryMode = false;
+
+
+                    }, 3000);
+
+                }
+
+            }
+
+        );
+
+    </script>
+
 
 </body>
 
