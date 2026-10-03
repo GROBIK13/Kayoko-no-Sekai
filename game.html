@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Прогулка Каёко — Токио</title><link rel="stylesheet" href="game.css">
+</head><body>
+<div id="start" class="screen"><div class="panel"><div class="logo">🌸</div><h1>Прогулка Каёко</h1><p>Мягкий аниме-Токио · версия 2</p><input id="name" maxlength="18" placeholder="Имя игрока"><button id="startBtn">🎮 Начать прогулку</button><small>Прогресс и рекорды сохраняются только на этом устройстве.</small></div></div>
+<div id="game" class="hidden">
+<header><a href="index.html">← Сайт</a><div class="stats">⭐ <b id="score">0</b>　🐈 <b id="cats">0</b>　📸 <b id="photos">0</b>　💰 <b id="coins">0</b></div><button id="menu">☰</button></header>
+<div id="view"><div id="world">
+  <div class="water river"></div><div class="water pond"></div>
+  <div class="road hroad road-a"></div><div class="road hroad road-b"></div><div class="road vroad road-c"></div><div class="road vroad road-d"></div>
+  <div class="sidewalk sw1"></div><div class="sidewalk sw2"></div><div class="sidewalk sw3"></div>
+  <div class="district label-shibuya">SHIBUYA</div><div class="district label-school">MIZUHANA</div><div class="district label-park">SAKURA PARK</div>
+  <div class="place academy"><span>🏫</span><b>Академия Мидзухана</b><small>Главный корпус</small></div>
+  <div class="place cafe"><span>☕</span><b>Кафе «Лунный кот»</b><small>уютное место у окна</small></div>
+  <div class="place shop"><span>👗</span><b>Магазин одежды</b><small>мода Каёко</small></div>
+  <div class="place park"><span>🌳</span><b>Сакура-парк</b><small>скамейки · цветы</small></div>
+  <div class="station st1"><span>🚉</span><b>Мидзухана</b></div><div class="station st2"><span>🚉</span><b>Сибуя</b></div>
+  <div class="tree t1">🌳</div><div class="tree t2">🌸</div><div class="tree t3">🌳</div><div class="tree t4">🌸</div><div class="tree t5">🌳</div><div class="tree t6">🌳</div>
+  <div class="vending v1">🥤</div><div class="vending v2">🥤</div><div class="bench b1">🪑</div><div class="bench b2">🪑</div>
+  <div id="kitten" class="obj kitten">🐈</div><div id="photo" class="obj photo">📷</div><div id="musicSpot" class="obj musicSpot">🎵</div>
+  <div class="crossing x1">▦ ▦ ▦ ▦</div><div class="crossing x2">▦ ▦ ▦ ▦</div>
+  <img id="kayoko" src="kayoko-walk-1.PNG" alt="Каёко">
+</div></div>
+<div id="action" class="hidden"><button id="actionBtn"></button></div>
+<div class="controls"><button data-k="ArrowLeft">◀</button><button data-k="ArrowUp">▲</button><button data-k="ArrowDown">▼</button><button data-k="ArrowRight">▶</button></div>
+<div id="msg"></div>
+</div>
+<div id="pet" class="overlay hidden"><div class="card"><div class="petart">👧🏻　🐈　💙</div><h2>🐈 Каёко гладит котёнка</h2><div class="paw">👋 🐈 👋 🐈</div><p>Маленький пушистый житель Токио доверился Каёко.</p><button id="finishPet">Завершить</button></div></div>
+<div id="shop" class="overlay hidden"><div class="card"><button class="close" data-close="shop">✕</button><h2>👗 Магазин одежды</h2><div id="items"></div></div></div>
+<div id="menuBox" class="overlay hidden"><div class="card"><button class="close" data-close="menuBox">✕</button><h2>📊 Прогресс</h2><div id="progress"></div><button id="newWalk" class="secondary">🌸 Новая прогулка</button><h3>🏆 Локальная таблица</h3><div id="ranking"></div></div></div>
+<script src="game.js"></script>
+</body></html>
