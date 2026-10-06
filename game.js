@@ -1,1170 +1,1851 @@
 // ==========================================
 // СУДЗУКО КАЁКО — TOKYO 3D
-// Полная версия game.js
+// Исправленная версия
 // ==========================================
 
-console.log("KAYOKO GAME JS ЗАПУЩЕН");
+(function () {
 
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xbfe2ec);
+  "use strict";
 
-const camera = new THREE.PerspectiveCamera(
-  55,
-  innerWidth / innerHeight,
-  0.1,
-  500
-);
+  // ------------------------------------------
+  // ЭЛЕМЕНТЫ
+  // ------------------------------------------
 
-const renderer = new THREE.WebGLRenderer({
-  antialias: true
-});
+  const loading = document.getElementById("loading");
+  const message = document.getElementById("message");
 
-renderer.setPixelRatio(Math.min(devicePixelRatio, 1.8));
-renderer.setSize(innerWidth, innerHeight);
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  function showError(text) {
+    if (!loading) return;
 
-document.body.appendChild(renderer.domElement);
+    loading.classList.remove("hidden");
 
-const clock = new THREE.Clock();
-
-const keys = {};
-const obstacles = [];
-const spots = [];
-
-let moving = false;
-let walkTime = 0;
-
-// ==========================================
-// СОХРАНЕНИЕ
-// ==========================================
-
-const saved = JSON.parse(
-  localStorage.getItem("kayokoTokyo3D") || "null"
-);
-
-const state = saved || {
-  score: 0,
-  cats: 0,
-  photos: 0,
-  coins: 0
-};
-
-// ==========================================
-// СВЕТ
-// ==========================================
-
-const ambient = new THREE.HemisphereLight(
-  0xeafaff,
-  0x6f8e73,
-  2.4
-);
-
-scene.add(ambient);
-
-const sun = new THREE.DirectionalLight(
-  0xffffff,
-  2.4
-);
-
-sun.position.set(35, 70, 25);
-sun.castShadow = true;
-sun.shadow.mapSize.set(1024, 1024);
-
-scene.add(sun);
-
-// ==========================================
-// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
-// ==========================================
-
-function addBox(
-  w,
-  h,
-  d,
-  color,
-  x,
-  y,
-  z,
-  obstacle = false
-) {
-  const mesh = new THREE.Mesh(
-    new THREE.BoxGeometry(w, h, d),
-    new THREE.MeshStandardMaterial({
-      color,
-      roughness: 0.88
-    })
-  );
-
-  mesh.position.set(x, y, z);
-
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
-
-  scene.add(mesh);
-
-  if (obstacle) {
-    obstacles.push({
-      x,
-      z,
-      w: w + 1.2,
-      d: d + 1.2
-    });
+    loading.innerHTML =
+      "❌ " + text +
+      "<br><small>Обнови страницу и попробуй ещё раз.</small>";
   }
 
-  return mesh;
-}
+  // ------------------------------------------
+  // ПРОВЕРКА THREE.JS
+  // ------------------------------------------
 
-// ==========================================
-// НАДПИСИ
-// ==========================================
+  if (window.threeLoadError || typeof THREE === "undefined") {
 
-function addLabel(text, x, y, z) {
-  const canvas = document.createElement("canvas");
-
-  canvas.width = 640;
-  canvas.height = 140;
-
-  const ctx = canvas.getContext("2d");
-
-  ctx.fillStyle = "rgba(255,255,255,.92)";
-
-  ctx.beginPath();
-  ctx.roundRect(
-    8,
-    8,
-    624,
-    124,
-    28
-  );
-
-  ctx.fill();
-
-  ctx.fillStyle = "#31566d";
-
-  ctx.font = "bold 38px sans-serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-
-  ctx.fillText(
-    text,
-    320,
-    70
-  );
-
-  const texture = new THREE.CanvasTexture(canvas);
-
-  const sprite = new THREE.Sprite(
-    new THREE.SpriteMaterial({
-      map: texture,
-      transparent: true
-    })
-  );
-
-  sprite.position.set(
-    x,
-    y,
-    z
-  );
-
-  sprite.scale.set(
-    12,
-    2.65,
-    1
-  );
-
-  scene.add(sprite);
-}
-
-// ==========================================
-// ЗДАНИЯ
-// ==========================================
-
-function building(
-  name,
-  x,
-  z,
-  w,
-  d,
-  color
-) {
-  addBox(
-    w,
-    7,
-    d,
-    color,
-    x,
-    3.5,
-    z,
-    true
-  );
-
-  addBox(
-    w + 0.3,
-    0.45,
-    d + 0.3,
-    0x8ca5ad,
-    x,
-    7.25,
-    z
-  );
-
-  addLabel(
-    name,
-    x,
-    9,
-    z
-  );
-}
-
-// ==========================================
-// ЗЕМЛЯ
-// ==========================================
-
-addBox(
-  260,
-  0.1,
-  260,
-  0xb8d5ac,
-  0,
-  0,
-  0
-);
-
-// ==========================================
-// ДОРОГИ
-// ==========================================
-
-addBox(
-  260,
-  0.12,
-  18,
-  0x68747b,
-  0,
-  0.06,
-  0
-);
-
-addBox(
-  18,
-  0.12,
-  260,
-  0x68747b,
-  0,
-  0.065,
-  0
-);
-
-addBox(
-  18,
-  0.12,
-  120,
-  0x68747b,
-  0,
-  0.065,
-  -70
-);
-
-addBox(
-  120,
-  0.12,
-  18,
-  0x68747b,
-  0,
-  0.065,
-  58
-);
-
-// ==========================================
-// ТРОТУАРЫ
-// ==========================================
-
-for (const z of [-12, 12]) {
-  addBox(
-    260,
-    0.16,
-    5,
-    0xd8d0c3,
-    0,
-    0.13,
-    z
-  );
-}
-
-for (const x of [-12, 12]) {
-  addBox(
-    5,
-    0.16,
-    260,
-    0xd8d0c3,
-    x,
-    0.13,
-    0
-  );
-}
-
-// ==========================================
-// ЗДАНИЯ ГОРОДА
-// ==========================================
-
-building(
-  "🏫 Академия Мидзухана",
-  -45,
-  -38,
-  34,
-  25,
-  0xd9e5ef
-);
-
-building(
-  "☕ Кафе",
-  -43,
-  34,
-  23,
-  18,
-  0xe8c8b9
-);
-
-building(
-  "👗 Магазин одежды",
-  43,
-  -34,
-  27,
-  21,
-  0xd9c4e2
-);
-
-building(
-  "🚉 Станция",
-  44,
-  35,
-  32,
-  21,
-  0xc9d5d0
-);
-
-building(
-  "🏠 Жилой квартал",
-  -77,
-  10,
-  20,
-  28,
-  0xd8d0c7
-);
-
-building(
-  "🏪 Конбини",
-  -77,
-  -34,
-  18,
-  18,
-  0xe2d1a5
-);
-
-building(
-  "🎧 Музыкальный магазин",
-  76,
-  -2,
-  22,
-  24,
-  0xc5d5e8
-);
-
-building(
-  "📚 Книжный",
-  76,
-  38,
-  21,
-  19,
-  0xe0c8c0
-);
-
-// ==========================================
-// ПАРК
-// ==========================================
-
-addBox(
-  47,
-  0.18,
-  40,
-  0x99c98e,
-  -25,
-  0.15,
-  74
-);
-
-addLabel(
-  "🌸 Сакура-парк",
-  -25,
-  4.5,
-  74
-);
-
-for (let i = 0; i < 22; i++) {
-  const x = -46 + Math.random() * 42;
-  const z = 56 + Math.random() * 36;
-
-  // Ствол
-  addBox(
-    1.1,
-    3,
-    1.1,
-    0x75523c,
-    x,
-    1.5,
-    z
-  );
-
-  // Крона
-  const crown = new THREE.Mesh(
-    new THREE.SphereGeometry(
-      2.5,
-      12,
-      10
-    ),
-    new THREE.MeshStandardMaterial({
-      color: 0xf2b6cb
-    })
-  );
-
-  crown.position.set(
-    x,
-    5,
-    z
-  );
-
-  crown.castShadow = true;
-
-  scene.add(crown);
-}
-
-// ==========================================
-// КАНАЛ
-// ==========================================
-
-const river = new THREE.Mesh(
-  new THREE.PlaneGeometry(
-    260,
-    17
-  ),
-  new THREE.MeshStandardMaterial({
-    color: 0x6fbdd0,
-    transparent: true,
-    opacity: 0.92
-  })
-);
-
-river.rotation.x = -Math.PI / 2;
-
-river.position.set(
-  0,
-  0.04,
-  102
-);
-
-scene.add(river);
-
-addLabel(
-  "🌊 Канал",
-  -68,
-  2,
-  102
-);
-
-// ==========================================
-// ФОНАРИ
-// ==========================================
-
-for (let i = -110; i <= 110; i += 22) {
-  for (const z of [-10, 10]) {
-
-    addBox(
-      0.25,
-      4.8,
-      0.25,
-      0x48525a,
-      i,
-      2.4,
-      z
+    showError(
+      "Не удалось загрузить Three.js"
     );
-
-    const lamp = new THREE.Mesh(
-      new THREE.SphereGeometry(
-        0.55,
-        10,
-        8
-      ),
-      new THREE.MeshStandardMaterial({
-        color: 0xffe9a8,
-        emissive: 0x5a4300,
-        emissiveIntensity: 0.7
-      })
-    );
-
-    lamp.position.set(
-      i,
-      5,
-      z
-    );
-
-    scene.add(lamp);
-  }
-}
-
-// ==========================================
-// ИНТЕРАКТИВНЫЕ МЕСТА
-// ==========================================
-
-function spot(type, x, z) {
-  const group = new THREE.Group();
-
-  const mat =
-    type === "cat"
-      ? 0xf1bf86
-      : 0xffd873;
-
-  const marker = new THREE.Mesh(
-    new THREE.SphereGeometry(
-      1.1,
-      16,
-      12
-    ),
-    new THREE.MeshStandardMaterial({
-      color: mat,
-      emissive: mat,
-      emissiveIntensity: 0.12
-    })
-  );
-
-  marker.position.y = 1.1;
-
-  group.add(marker);
-
-  group.position.set(
-    x,
-    0,
-    z
-  );
-
-  scene.add(group);
-
-  spots.push({
-    type,
-    x,
-    z,
-    group
-  });
-}
-
-// Котёнок
-spot(
-  "cat",
-  -8,
-  32
-);
-
-// Фототочка
-spot(
-  "photo",
-  31,
-  -8
-);
-
-// ==========================================
-// КАЁКО
-// ==========================================
-
-const kayoko = new THREE.Group();
-
-// Тело
-const body = new THREE.Mesh(
-  new THREE.CapsuleGeometry(
-    0.68,
-    1.45,
-    5,
-    10
-  ),
-  new THREE.MeshStandardMaterial({
-    color: 0x31566d
-  })
-);
-
-body.position.y = 1.35;
-body.castShadow = true;
-
-kayoko.add(body);
-
-// Голова
-const head = new THREE.Mesh(
-  new THREE.SphereGeometry(
-    0.78,
-    18,
-    14
-  ),
-  new THREE.MeshStandardMaterial({
-    color: 0xffe4d5
-  })
-);
-
-head.position.y = 2.65;
-head.castShadow = true;
-
-kayoko.add(head);
-
-// Волосы
-const hair = new THREE.Mesh(
-  new THREE.SphereGeometry(
-    0.86,
-    18,
-    14
-  ),
-  new THREE.MeshStandardMaterial({
-    color: 0xf2f4f7
-  })
-);
-
-hair.scale.set(
-  1.04,
-  0.74,
-  1.04
-);
-
-hair.position.set(
-  0,
-  2.92,
-  -0.06
-);
-
-hair.castShadow = true;
-
-kayoko.add(hair);
-
-// ==========================================
-// СИНИЙ БАНТ КАЁКО
-// ==========================================
-
-const bowL = addBox(
-  0.48,
-  0.16,
-  0.12,
-  0x355da8,
-  -0.32,
-  2.22,
-  -0.72
-);
-
-const bowR = addBox(
-  0.48,
-  0.16,
-  0.12,
-  0x355da8,
-  0.32,
-  2.22,
-  -0.72
-);
-
-kayoko.add(bowL);
-kayoko.add(bowR);
-
-// ==========================================
-// ЧЁРНАЯ ЗАКОЛКА-КРЕСТИК
-// ==========================================
-
-const clipVertical = new THREE.Mesh(
-  new THREE.BoxGeometry(
-    0.08,
-    0.38,
-    0.08
-  ),
-  new THREE.MeshStandardMaterial({
-    color: 0x171717
-  })
-);
-
-clipVertical.position.set(
-  0.62,
-  3.12,
-  -0.38
-);
-
-clipVertical.rotation.z = -0.25;
-
-kayoko.add(clipVertical);
-
-const clipHorizontal = new THREE.Mesh(
-  new THREE.BoxGeometry(
-    0.28,
-    0.08,
-    0.08
-  ),
-  new THREE.MeshStandardMaterial({
-    color: 0x171717
-  })
-);
-
-clipHorizontal.position.set(
-  0.62,
-  3.12,
-  -0.38
-);
-
-clipHorizontal.rotation.z = -0.25;
-
-kayoko.add(clipHorizontal);
-
-// ==========================================
-// ПОЛОЖЕНИЕ КАЁКО
-// ==========================================
-
-kayoko.position.set(
-  0,
-  0,
-  25
-);
-
-scene.add(kayoko);
-
-// ==========================================
-// ПРОВЕРКА СТОЛКНОВЕНИЙ
-// ==========================================
-
-function blocked(nx, nz) {
-  return obstacles.some(o =>
-    Math.abs(nx - o.x) < o.w / 2 &&
-    Math.abs(nz - o.z) < o.d / 2
-  );
-}
-
-// ==========================================
-// HUD
-// ==========================================
-
-function updateHUD() {
-  document.getElementById("score").textContent =
-    state.score;
-
-  document.getElementById("cats").textContent =
-    state.cats;
-
-  document.getElementById("photos").textContent =
-    state.photos;
-
-  document.getElementById("coins").textContent =
-    state.coins;
-}
-
-// ==========================================
-// СОХРАНЕНИЕ
-// ==========================================
-
-function save() {
-  localStorage.setItem(
-    "kayokoTokyo3D",
-    JSON.stringify(state)
-  );
-
-  updateHUD();
-}
-
-// ==========================================
-// СООБЩЕНИЕ
-// ==========================================
-
-function say(text) {
-  const el = document.getElementById(
-    "message"
-  );
-
-  el.textContent = text;
-
-  el.classList.add("show");
-
-  clearTimeout(say.timer);
-
-  say.timer = setTimeout(() => {
-    el.classList.remove("show");
-  }, 2200);
-}
-
-// ==========================================
-// ВЗАИМОДЕЙСТВИЕ
-// ==========================================
-
-function interact() {
-  for (const s of spots) {
-
-    const distance = Math.hypot(
-      kayoko.position.x - s.x,
-      kayoko.position.z - s.z
-    );
-
-    if (distance < 4) {
-
-      // --------------------------
-      // КОТЁНОК
-      // --------------------------
-
-      if (s.type === "cat") {
-
-        say(
-          "🐈 Нажми E — погладить котёнка"
-        );
-
-        if (keys.KeyE) {
-
-          keys.KeyE = false;
-
-          state.cats++;
-          state.score += 100;
-          state.coins += 100;
-
-          save();
-
-          say(
-            "💙 Каёко погладила котёнка!"
-          );
-        }
-
-      }
-
-      // --------------------------
-      // ФОТО
-      // --------------------------
-
-      else {
-
-        say(
-          "📸 Нажми E — сделать фотографию"
-        );
-
-        if (keys.KeyE) {
-
-          keys.KeyE = false;
-
-          state.photos++;
-          state.score += 60;
-          state.coins += 40;
-
-          save();
-
-          say(
-            "📸 Фотография Токио сохранена!"
-          );
-        }
-      }
-    }
-  }
-}
-
-// ==========================================
-// ДВИЖЕНИЕ
-// ==========================================
-
-function move(dt) {
-
-  let x = 0;
-  let z = 0;
-
-  if (
-    keys.ArrowUp ||
-    keys.KeyW
-  ) {
-    z -= 1;
-  }
-
-  if (
-    keys.ArrowDown ||
-    keys.KeyS
-  ) {
-    z += 1;
-  }
-
-  if (
-    keys.ArrowLeft ||
-    keys.KeyA
-  ) {
-    x -= 1;
-  }
-
-  if (
-    keys.ArrowRight ||
-    keys.KeyD
-  ) {
-    x += 1;
-  }
-
-  const length = Math.hypot(
-    x,
-    z
-  );
-
-  moving = length > 0;
-
-  if (!moving) {
-
-    body.position.y = 1.35;
 
     return;
   }
 
-  x /= length;
-  z /= length;
+  console.log("KAYOKO GAME JS ЗАПУЩЕН");
 
-  // Скорость Каёко
-  const speed = 9 * dt;
+  // ------------------------------------------
+  // ОШИБКИ
+  // ------------------------------------------
 
-  const nx =
-    kayoko.position.x +
-    x * speed;
+  window.addEventListener("error", function (event) {
 
-  const nz =
-    kayoko.position.z +
-    z * speed;
-
-  if (!blocked(nx, nz)) {
-
-    kayoko.position.x = nx;
-    kayoko.position.z = nz;
-  }
-
-  // Поворот персонажа
-  kayoko.rotation.y =
-    Math.atan2(x, z);
-
-  // Анимация ходьбы
-  walkTime += dt * 10;
-
-  body.position.y =
-    1.35 +
-    Math.abs(
-      Math.sin(walkTime)
-    ) * 0.08;
-}
-
-// ==========================================
-// КАМЕРА
-// ==========================================
-
-function updateCamera() {
-
-  const target = new THREE.Vector3(
-    kayoko.position.x,
-    2.3,
-    kayoko.position.z
-  );
-
-  const desired = new THREE.Vector3(
-    kayoko.position.x,
-    8,
-    kayoko.position.z + 12
-  );
-
-  camera.position.lerp(
-    desired,
-    0.08
-  );
-
-  camera.lookAt(target);
-}
-
-// ==========================================
-// КЛАВИАТУРА
-// ==========================================
-
-window.addEventListener(
-  "keydown",
-  event => {
-
-    keys[event.code] = true;
+    console.error(event.error || event.message);
 
     if (
-      event.code === "ArrowUp" ||
-      event.code === "ArrowDown" ||
-      event.code === "ArrowLeft" ||
-      event.code === "ArrowRight" ||
-      event.code === "Space"
+      loading &&
+      !loading.classList.contains("hidden")
     ) {
-      event.preventDefault();
+
+      showError(
+        event.message || "неизвестная ошибка"
+      );
     }
 
-    if (event.code === "KeyE") {
-      interact();
-    }
-  }
-);
-
-window.addEventListener(
-  "keyup",
-  event => {
-    keys[event.code] = false;
-  }
-);
-
-// ==========================================
-// МОБИЛЬНОЕ УПРАВЛЕНИЕ
-// ==========================================
-
-document
-  .querySelectorAll(
-    "#mobileControls button"
-  )
-  .forEach(button => {
-
-    const key =
-      button.dataset.key;
-
-    button.addEventListener(
-      "pointerdown",
-      event => {
-
-        event.preventDefault();
-
-        keys[key] = true;
-      }
-    );
-
-    button.addEventListener(
-      "pointerup",
-      event => {
-
-        event.preventDefault();
-
-        keys[key] = false;
-      }
-    );
-
-    button.addEventListener(
-      "pointercancel",
-      event => {
-
-        event.preventDefault();
-
-        keys[key] = false;
-      }
-    );
-
-    button.addEventListener(
-      "pointerleave",
-      event => {
-
-        event.preventDefault();
-
-        keys[key] = false;
-      }
-    );
   });
 
-// ==========================================
-// НОВАЯ ПРОГУЛКА
-// ==========================================
+  // ------------------------------------------
+  // СЦЕНА
+  // ------------------------------------------
 
-const newWalkButton =
-  document.getElementById(
-    "newWalk"
+  const scene = new THREE.Scene();
+
+  scene.background =
+    new THREE.Color(0xbfe2ec);
+
+  // ------------------------------------------
+  // КАМЕРА
+  // ------------------------------------------
+
+  const camera =
+    new THREE.PerspectiveCamera(
+      55,
+      window.innerWidth /
+      window.innerHeight,
+      0.1,
+      500
+    );
+
+  camera.position.set(
+    0,
+    7,
+    12
   );
 
-if (newWalkButton) {
+  // ------------------------------------------
+  // РЕНДЕР
+  // ------------------------------------------
 
-  newWalkButton.addEventListener(
-    "click",
-    () => {
+  let renderer;
 
-      state.score = 0;
-      state.cats = 0;
-      state.photos = 0;
-      state.coins = 0;
+  try {
 
-      kayoko.position.set(
-        0,
-        0,
-        25
+    renderer =
+      new THREE.WebGLRenderer({
+        antialias: true
+      });
+
+  } catch (error) {
+
+    console.error(error);
+
+    showError(
+      "Браузер не смог запустить 3D-графику"
+    );
+
+    return;
+  }
+
+  renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+  );
+
+  renderer.setPixelRatio(
+    Math.min(
+      window.devicePixelRatio || 1,
+      2
+    )
+  );
+
+  renderer.shadowMap.enabled = true;
+
+  renderer.shadowMap.type =
+    THREE.PCFSoftShadowMap;
+
+  document.body.appendChild(
+    renderer.domElement
+  );
+
+  // ------------------------------------------
+  // СВЕТ
+  // ------------------------------------------
+
+  const ambientLight =
+    new THREE.AmbientLight(
+      0xffffff,
+      1.8
+    );
+
+  scene.add(ambientLight);
+
+  const sun =
+    new THREE.DirectionalLight(
+      0xffffff,
+      2.2
+    );
+
+  sun.position.set(
+    40,
+    70,
+    25
+  );
+
+  sun.castShadow = true;
+
+  sun.shadow.mapSize.width = 1024;
+  sun.shadow.mapSize.height = 1024;
+
+  scene.add(sun);
+
+  // ------------------------------------------
+  // ГРУППА ГОРОДА
+  // ------------------------------------------
+
+  const city =
+    new THREE.Group();
+
+  scene.add(city);
+
+  // ------------------------------------------
+  // СОСТОЯНИЕ ИГРЫ
+  // ------------------------------------------
+
+  const SAVE_KEY =
+    "kayokoTokyo3D";
+
+  let save = {
+    score: 0,
+    cats: 0,
+    photos: 0,
+    coins: 0
+  };
+
+  try {
+
+    const old =
+      localStorage.getItem(
+        SAVE_KEY
       );
 
-      kayoko.rotation.y = 0;
+    if (old) {
 
-      save();
+      const parsed =
+        JSON.parse(old);
 
-      say(
-        "🌸 Новая прогулка началась!"
+      save = {
+        ...save,
+        ...parsed
+      };
+    }
+
+  } catch (error) {
+
+    console.warn(
+      "Не удалось загрузить сохранение",
+      error
+    );
+
+  }
+
+  function saveGame() {
+
+    try {
+
+      localStorage.setItem(
+        SAVE_KEY,
+        JSON.stringify(save)
       );
+
+    } catch (error) {
+
+      console.warn(
+        "Не удалось сохранить игру",
+        error
+      );
+
+    }
+
+  }
+
+  // ------------------------------------------
+  // ФУНКЦИЯ КУБА
+  // ------------------------------------------
+
+  function addBox(
+    x,
+    y,
+    z,
+    w,
+    h,
+    d,
+    color,
+    parent = city
+  ) {
+
+    const geometry =
+      new THREE.BoxGeometry(
+        w,
+        h,
+        d
+      );
+
+    const material =
+      new THREE.MeshStandardMaterial({
+        color: color,
+        roughness: 0.85
+      });
+
+    const mesh =
+      new THREE.Mesh(
+        geometry,
+        material
+      );
+
+    mesh.position.set(
+      x,
+      y + h / 2,
+      z
+    );
+
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+
+    parent.add(mesh);
+
+    return mesh;
+  }
+
+  // ------------------------------------------
+  // ЗЕМЛЯ
+  // ------------------------------------------
+
+  const groundGeometry =
+    new THREE.PlaneGeometry(
+      180,
+      180
+    );
+
+  const groundMaterial =
+    new THREE.MeshStandardMaterial({
+      color: 0xd8eadb
+    });
+
+  const ground =
+    new THREE.Mesh(
+      groundGeometry,
+      groundMaterial
+    );
+
+  ground.rotation.x =
+    -Math.PI / 2;
+
+  ground.receiveShadow = true;
+
+  scene.add(ground);
+
+  // ------------------------------------------
+  // ДОРОГИ
+  // ------------------------------------------
+
+  function road(
+    x,
+    z,
+    w,
+    d
+  ) {
+
+    const geometry =
+      new THREE.PlaneGeometry(
+        w,
+        d
+      );
+
+    const material =
+      new THREE.MeshStandardMaterial({
+        color: 0x6f7880
+      });
+
+    const mesh =
+      new THREE.Mesh(
+        geometry,
+        material
+      );
+
+    mesh.rotation.x =
+      -Math.PI / 2;
+
+    mesh.position.set(
+      x,
+      0.02,
+      z
+    );
+
+    mesh.receiveShadow = true;
+
+    scene.add(mesh);
+
+  }
+
+  road(
+    0,
+    0,
+    18,
+    180
+  );
+
+  road(
+    0,
+    0,
+    180,
+    18
+  );
+
+  road(
+    -45,
+    0,
+    10,
+    180
+  );
+
+  road(
+    45,
+    0,
+    10,
+    180
+  );
+
+  // ------------------------------------------
+  // ТРОТУАРЫ
+  // ------------------------------------------
+
+  function sidewalk(
+    x,
+    z,
+    w,
+    d
+  ) {
+
+    const geometry =
+      new THREE.PlaneGeometry(
+        w,
+        d
+      );
+
+    const material =
+      new THREE.MeshStandardMaterial({
+        color: 0xcbd6d9
+      });
+
+    const mesh =
+      new THREE.Mesh(
+        geometry,
+        material
+      );
+
+    mesh.rotation.x =
+      -Math.PI / 2;
+
+    mesh.position.set(
+      x,
+      0.025,
+      z
+    );
+
+    scene.add(mesh);
+
+  }
+
+  sidewalk(
+    -14,
+    0,
+    7,
+    180
+  );
+
+  sidewalk(
+    14,
+    0,
+    7,
+    180
+  );
+
+  sidewalk(
+    0,
+    -14,
+    180,
+    7
+  );
+
+  sidewalk(
+    0,
+    14,
+    180,
+    7
+  );
+
+  // ------------------------------------------
+  // ЗДАНИЕ
+  // ------------------------------------------
+
+  function building(
+    x,
+    z,
+    w,
+    h,
+    d,
+    color,
+    name
+  ) {
+
+    const group =
+      new THREE.Group();
+
+    group.position.set(
+      x,
+      0,
+      z
+    );
+
+    city.add(group);
+
+    addBox(
+      0,
+      0,
+      0,
+      w,
+      h,
+      d,
+      color,
+      group
+    );
+
+    if (name) {
+
+      addLabel(
+        name,
+        0,
+        h + 1,
+        0,
+        group
+      );
+
+    }
+
+    return {
+      x,
+      z,
+      w,
+      h,
+      d,
+      group
+    };
+
+  }
+
+  // ------------------------------------------
+  // НАДПИСЬ
+  // ------------------------------------------
+
+  function addLabel(
+    text,
+    x,
+    y,
+    z,
+    parent = city
+  ) {
+
+    const canvas =
+      document.createElement(
+        "canvas"
+      );
+
+    canvas.width = 512;
+    canvas.height = 128;
+
+    const ctx =
+      canvas.getContext("2d");
+
+    ctx.clearRect(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    ctx.fillStyle =
+      "rgba(255,255,255,0.95)";
+
+    if (
+      ctx.roundRect
+    ) {
+
+      ctx.beginPath();
+
+      ctx.roundRect(
+        10,
+        10,
+        492,
+        108,
+        20
+      );
+
+      ctx.fill();
+
+    } else {
+
+      ctx.fillRect(
+        10,
+        10,
+        492,
+        108
+      );
+
+    }
+
+    ctx.fillStyle =
+      "#31566d";
+
+    ctx.font =
+      "bold 38px Arial";
+
+    ctx.textAlign =
+      "center";
+
+    ctx.textBaseline =
+      "middle";
+
+    ctx.fillText(
+      text,
+      256,
+      64
+    );
+
+    const texture =
+      new THREE.CanvasTexture(
+        canvas
+      );
+
+    const material =
+      new THREE.SpriteMaterial({
+        map: texture,
+        transparent: true
+      });
+
+    const sprite =
+      new THREE.Sprite(
+        material
+      );
+
+    sprite.position.set(
+      x,
+      y,
+      z
+    );
+
+    sprite.scale.set(
+      8,
+      2,
+      1
+    );
+
+    parent.add(sprite);
+
+  }
+
+  // ------------------------------------------
+  // ЗДАНИЯ
+  // ------------------------------------------
+
+  building(
+    -38,
+    -35,
+    25,
+    10,
+    18,
+    0xddeeff,
+    "Академия Мидзухана"
+  );
+
+  building(
+    34,
+    -34,
+    18,
+    7,
+    15,
+    0xffd9e5,
+    "Кафе"
+  );
+
+  building(
+    36,
+    34,
+    20,
+    8,
+    18,
+    0xf5e4c7,
+    "Магазин одежды"
+  );
+
+  building(
+    -38,
+    34,
+    20,
+    11,
+    16,
+    0xd7e6f5,
+    "Станция"
+  );
+
+  building(
+    -60,
+    5,
+    18,
+    9,
+    18,
+    0xe4d7f5,
+    "Жилой квартал"
+  );
+
+  building(
+    60,
+    5,
+    18,
+    9,
+    18,
+    0xf4dfca,
+    "Конбини"
+  );
+
+  building(
+    -35,
+    58,
+    18,
+    8,
+    15,
+    0xd9f0e5,
+    "Музыкальный магазин"
+  );
+
+  building(
+    35,
+    58,
+    18,
+    8,
+    15,
+    0xf0e3f4,
+    "Книжный"
+  );
+
+  // ------------------------------------------
+  // САКУРА
+  // ------------------------------------------
+
+  function createTree(
+    x,
+    z
+  ) {
+
+    const tree =
+      new THREE.Group();
+
+    tree.position.set(
+      x,
+      0,
+      z
+    );
+
+    const trunk =
+      new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          0.35,
+          0.45,
+          3,
+          8
+        ),
+        new THREE.MeshStandardMaterial({
+          color: 0x76513b
+        })
+      );
+
+    trunk.position.y =
+      1.5;
+
+    trunk.castShadow = true;
+
+    tree.add(trunk);
+
+    const crown =
+      new THREE.Mesh(
+        new THREE.SphereGeometry(
+          2.3,
+          16,
+          12
+        ),
+        new THREE.MeshStandardMaterial({
+          color: 0xffb7d1
+        })
+      );
+
+    crown.position.y =
+      4;
+
+    crown.castShadow = true;
+
+    tree.add(crown);
+
+    city.add(tree);
+
+  }
+
+  const sakuraPositions = [
+    [-25, -25],
+    [-20, -25],
+    [-15, -25],
+    [20, -25],
+    [25, -25],
+    [30, -25],
+
+    [-25, 25],
+    [-20, 25],
+    [-15, 25],
+    [20, 25],
+    [25, 25],
+    [30, 25],
+
+    [-25, 45],
+    [-20, 45],
+    [20, 45],
+    [25, 45],
+
+    [-55, -20],
+    [-55, -15],
+    [55, -20],
+    [55, -15],
+
+    [-5, 35],
+    [5, 35]
+  ];
+
+  sakuraPositions.forEach(
+    pos => createTree(
+      pos[0],
+      pos[1]
+    )
+  );
+
+  // ------------------------------------------
+  // КАНАЛ
+  // ------------------------------------------
+
+  const canalGeometry =
+    new THREE.PlaneGeometry(
+      10,
+      100
+    );
+
+  const canalMaterial =
+    new THREE.MeshStandardMaterial({
+      color: 0x71bfd1,
+      roughness: 0.2,
+      metalness: 0.1
+    });
+
+  const canal =
+    new THREE.Mesh(
+      canalGeometry,
+      canalMaterial
+    );
+
+  canal.rotation.x =
+    -Math.PI / 2;
+
+  canal.position.set(
+    25,
+    0.04,
+    0
+  );
+
+  scene.add(canal);
+
+  // ------------------------------------------
+  // ФОНАРИ
+  // ------------------------------------------
+
+  function streetLamp(
+    x,
+    z
+  ) {
+
+    const group =
+      new THREE.Group();
+
+    group.position.set(
+      x,
+      0,
+      z
+    );
+
+    const pole =
+      new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          0.12,
+          0.15,
+          4,
+          8
+        ),
+        new THREE.MeshStandardMaterial({
+          color: 0x343d43
+        })
+      );
+
+    pole.position.y =
+      2;
+
+    pole.castShadow = true;
+
+    group.add(pole);
+
+    const lamp =
+      new THREE.Mesh(
+        new THREE.SphereGeometry(
+          0.35,
+          12,
+          12
+        ),
+        new THREE.MeshStandardMaterial({
+          color: 0xfff0bd,
+          emissive: 0xffd76a,
+          emissiveIntensity: 0.5
+        })
+      );
+
+    lamp.position.y =
+      4.2;
+
+    group.add(lamp);
+
+    city.add(group);
+
+  }
+
+  for (
+    let z = -70;
+    z <= 70;
+    z += 20
+  ) {
+
+    streetLamp(
+      -11,
+      z
+    );
+
+    streetLamp(
+      11,
+      z
+    );
+
+  }
+
+  // ------------------------------------------
+  // КАЁКО
+  // ------------------------------------------
+
+  const kayoko =
+    new THREE.Group();
+
+  kayoko.position.set(
+    0,
+    0,
+    5
+  );
+
+  scene.add(kayoko);
+
+  // тело
+
+  const body =
+    new THREE.Mesh(
+      new THREE.CapsuleGeometry(
+        0.7,
+        1.6,
+        8,
+        16
+      ),
+      new THREE.MeshStandardMaterial({
+        color: 0xf4f5f8
+      })
+    );
+
+  body.position.y =
+    1.5;
+
+  body.castShadow = true;
+
+  kayoko.add(body);
+
+  // голова
+
+  const head =
+    new THREE.Mesh(
+      new THREE.SphereGeometry(
+        0.72,
+        24,
+        16
+      ),
+      new THREE.MeshStandardMaterial({
+        color: 0xffe2d1
+      })
+    );
+
+  head.position.y =
+    3.0;
+
+  head.castShadow = true;
+
+  kayoko.add(head);
+
+  // белые волосы
+
+  const hair =
+    new THREE.Mesh(
+      new THREE.SphereGeometry(
+        0.78,
+        24,
+        16
+      ),
+      new THREE.MeshStandardMaterial({
+        color: 0xffffff
+      })
+    );
+
+  hair.scale.set(
+    1.05,
+    1.05,
+    0.9
+  );
+
+  hair.position.set(
+    0,
+    3.18,
+    -0.08
+  );
+
+  hair.castShadow = true;
+
+  kayoko.add(hair);
+
+  // глаза
+
+  function eye(x) {
+
+    const eye =
+      new THREE.Mesh(
+        new THREE.SphereGeometry(
+          0.10,
+          12,
+          12
+        ),
+        new THREE.MeshStandardMaterial({
+          color: 0x4c91c9
+        })
+      );
+
+    eye.position.set(
+      x,
+      3.05,
+      -0.68
+    );
+
+    kayoko.add(eye);
+
+  }
+
+  eye(-0.24);
+  eye(0.24);
+
+  // синий бант
+
+  const bowMaterial =
+    new THREE.MeshStandardMaterial({
+      color: 0x397fc4
+    });
+
+  const bowLeft =
+    new THREE.Mesh(
+      new THREE.SphereGeometry(
+        0.35,
+        16,
+        12
+      ),
+      bowMaterial
+    );
+
+  bowLeft.scale.set(
+    1.2,
+    0.7,
+    0.35
+  );
+
+  bowLeft.position.set(
+    -0.32,
+    2.95,
+    -0.67
+  );
+
+  kayoko.add(bowLeft);
+
+  const bowRight =
+    bowLeft.clone();
+
+  bowRight.position.x =
+    0.32;
+
+  kayoko.add(bowRight);
+
+  const bowCenter =
+    new THREE.Mesh(
+      new THREE.SphereGeometry(
+        0.16,
+        12,
+        12
+      ),
+      bowMaterial
+    );
+
+  bowCenter.position.set(
+    0,
+    2.95,
+    -0.68
+  );
+
+  kayoko.add(bowCenter);
+
+  // чёрная заколка-крестик
+
+  const clipMaterial =
+    new THREE.MeshStandardMaterial({
+      color: 0x151515
+    });
+
+  const clip1 =
+    new THREE.Mesh(
+      new THREE.BoxGeometry(
+        0.08,
+        0.35,
+        0.08
+      ),
+      clipMaterial
+    );
+
+  const clip2 =
+    new THREE.Mesh(
+      new THREE.BoxGeometry(
+        0.35,
+        0.08,
+        0.08
+      ),
+      clipMaterial
+    );
+
+  clip1.position.set(
+    0.63,
+    3.45,
+    -0.42
+  );
+
+  clip2.position.set(
+    0.63,
+    3.45,
+    -0.42
+  );
+
+  kayoko.add(
+    clip1,
+    clip2
+  );
+
+  // ------------------------------------------
+  // ИНТЕРАКТИВНЫЕ ОБЪЕКТЫ
+  // ------------------------------------------
+
+  const interactables = [];
+
+  // КОШКА
+
+  const cat =
+    new THREE.Group();
+
+  cat.position.set(
+    -8,
+    0,
+    32
+  );
+
+  scene.add(cat);
+
+  const catBody =
+    new THREE.Mesh(
+      new THREE.SphereGeometry(
+        0.55,
+        16,
+        12
+      ),
+      new THREE.MeshStandardMaterial({
+        color: 0x777777
+      })
+    );
+
+  catBody.scale.set(
+    1.3,
+    0.8,
+    1
+  );
+
+  catBody.position.y =
+    0.6;
+
+  cat.add(catBody);
+
+  const catHead =
+    new THREE.Mesh(
+      new THREE.SphereGeometry(
+        0.45,
+        16,
+        12
+      ),
+      new THREE.MeshStandardMaterial({
+        color: 0x888888
+      })
+    );
+
+  catHead.position.set(
+    0,
+    1.05,
+    -0.35
+  );
+
+  cat.add(catHead);
+
+  const earGeometry =
+    new THREE.ConeGeometry(
+      0.18,
+      0.45,
+      4
+    );
+
+  const earMaterial =
+    new THREE.MeshStandardMaterial({
+      color: 0x888888
+    });
+
+  const ear1 =
+    new THREE.Mesh(
+      earGeometry,
+      earMaterial
+    );
+
+  ear1.position.set(
+    -0.25,
+    1.45,
+    -0.35
+  );
+
+  cat.add(ear1);
+
+  const ear2 =
+    ear1.clone();
+
+  ear2.position.x =
+    0.25;
+
+  cat.add(ear2);
+
+  interactables.push({
+    object: cat,
+    type: "cat"
+  });
+
+  // ФОТО
+
+  const photo =
+    new THREE.Mesh(
+      new THREE.BoxGeometry(
+        1.4,
+        1.8,
+        0.12
+      ),
+      new THREE.MeshStandardMaterial({
+        color: 0xffffff
+      })
+    );
+
+  photo.position.set(
+    31,
+    1.2,
+    -8
+  );
+
+  scene.add(photo);
+
+  interactables.push({
+    object: photo,
+    type: "photo"
+  });
+
+  // ------------------------------------------
+  // КОЛЛИЗИИ
+  // ------------------------------------------
+
+  const obstacles = [];
+
+  const buildingData = [
+    [-38, -35, 25, 18],
+    [34, -34, 18, 15],
+    [36, 34, 20, 18],
+    [-38, 34, 20, 16],
+    [-60, 5, 18, 18],
+    [60, 5, 18, 18],
+    [-35, 58, 18, 15],
+    [35, 58, 18, 15]
+  ];
+
+  buildingData.forEach(
+    item => {
+
+      obstacles.push({
+        x: item[0],
+        z: item[1],
+        w: item[2],
+        d: item[3]
+      });
+
     }
   );
-}
 
-// ==========================================
-// ИЗМЕНЕНИЕ РАЗМЕРА ОКНА
-// ==========================================
+  function collides(
+    x,
+    z
+  ) {
 
-window.addEventListener(
-  "resize",
-  () => {
+    const radius = 0.9;
 
-    camera.aspect =
-      innerWidth / innerHeight;
+    for (
+      const o of obstacles
+    ) {
 
-    camera.updateProjectionMatrix();
+      if (
+        x >
+          o.x - o.w / 2 - radius &&
+        x <
+          o.x + o.w / 2 + radius &&
+        z >
+          o.z - o.d / 2 - radius &&
+        z <
+          o.z + o.d / 2 + radius
+      ) {
 
-    renderer.setSize(
-      innerWidth,
-      innerHeight
-    );
+        return true;
+
+      }
+
+    }
+
+    return false;
+
   }
-);
 
-// ==========================================
-// HUD
-// ==========================================
+  // ------------------------------------------
+  // УПРАВЛЕНИЕ
+  // ------------------------------------------
 
-updateHUD();
+  const keys = {};
 
-// ==========================================
-// ЗАГРУЗКА
-// ==========================================
+  window.addEventListener(
+    "keydown",
+    function (event) {
 
-setTimeout(() => {
+      keys[event.key.toLowerCase()] =
+        true;
 
-  const loading =
+      if (
+        event.key === "ArrowUp" ||
+        event.key === "ArrowDown" ||
+        event.key === "ArrowLeft" ||
+        event.key === "ArrowRight"
+      ) {
+
+        event.preventDefault();
+
+      }
+
+    },
+    { passive: false }
+  );
+
+  window.addEventListener(
+    "keyup",
+    function (event) {
+
+      keys[event.key.toLowerCase()] =
+        false;
+
+    }
+  );
+
+  // ------------------------------------------
+  // МОБИЛЬНЫЕ КНОПКИ
+  // ------------------------------------------
+
+  const mobileButtons =
+    document.querySelectorAll(
+      "#mobileControls button"
+    );
+
+  mobileButtons.forEach(
+    button => {
+
+      const key =
+        button.dataset.key;
+
+      button.addEventListener(
+        "pointerdown",
+        function (event) {
+
+          event.preventDefault();
+
+          keys[
+            key.toLowerCase()
+          ] = true;
+
+        }
+      );
+
+      button.addEventListener(
+        "pointerup",
+        function (event) {
+
+          event.preventDefault();
+
+          keys[
+            key.toLowerCase()
+          ] = false;
+
+        }
+      );
+
+      button.addEventListener(
+        "pointercancel",
+        function () {
+
+          keys[
+            key.toLowerCase()
+          ] = false;
+
+        }
+      );
+
+      button.addEventListener(
+        "pointerleave",
+        function () {
+
+          keys[
+            key.toLowerCase()
+          ] = false;
+
+        }
+      );
+
+    }
+  );
+
+  // ------------------------------------------
+  // ДВИЖЕНИЕ
+  // ------------------------------------------
+
+  const clock =
+    new THREE.Clock();
+
+  const speed = 8;
+
+  function move(dt) {
+
+    let dx = 0;
+    let dz = 0;
+
+    if (
+      keys["w"] ||
+      keys["arrowup"]
+    ) {
+
+      dz -= 1;
+
+    }
+
+    if (
+      keys["s"] ||
+      keys["arrowdown"]
+    ) {
+
+      dz += 1;
+
+    }
+
+    if (
+      keys["a"] ||
+      keys["arrowleft"]
+    ) {
+
+      dx -= 1;
+
+    }
+
+    if (
+      keys["d"] ||
+      keys["arrowright"]
+    ) {
+
+      dx += 1;
+
+    }
+
+    if (
+      dx === 0 &&
+      dz === 0
+    ) {
+
+      return;
+
+    }
+
+    const length =
+      Math.sqrt(
+        dx * dx +
+        dz * dz
+      );
+
+    dx /= length;
+    dz /= length;
+
+    const nextX =
+      kayoko.position.x +
+      dx * speed * dt;
+
+    const nextZ =
+      kayoko.position.z +
+      dz * speed * dt;
+
+    if (
+      !collides(
+        nextX,
+        kayoko.position.z
+      )
+    ) {
+
+      kayoko.position.x =
+        nextX;
+
+    }
+
+    if (
+      !collides(
+        kayoko.position.x,
+        nextZ
+      )
+    ) {
+
+      kayoko.position.z =
+        nextZ;
+
+    }
+
+    // поворачиваем Каёко
+
+    kayoko.rotation.y =
+      Math.atan2(
+        dx,
+        dz
+      );
+
+  }
+
+  // ------------------------------------------
+  // ВЗАИМОДЕЙСТВИЕ
+  // ------------------------------------------
+
+  let messageTimer = null;
+
+  function showMessage(text) {
+
+    if (!message) return;
+
+    message.textContent =
+      text;
+
+    message.classList.add(
+      "show"
+    );
+
+    clearTimeout(
+      messageTimer
+    );
+
+    messageTimer =
+      setTimeout(
+        function () {
+
+          message.classList.remove(
+            "show"
+          );
+
+        },
+        2200
+      );
+
+  }
+
+  function distance(
+    a,
+    b
+  ) {
+
+    const dx =
+      a.x - b.x;
+
+    const dz =
+      a.z - b.z;
+
+    return Math.sqrt(
+      dx * dx +
+      dz * dz
+    );
+
+  }
+
+  function interact() {
+
+    if (
+      !keys["e"]
+    ) {
+
+      return;
+
+    }
+
+    keys["e"] = false;
+
+    for (
+      const item of interactables
+    ) {
+
+      const pos =
+        item.object.position;
+
+      if (
+        distance(
+          kayoko.position,
+          pos
+        ) < 4
+      ) {
+
+        if (
+          item.type === "cat"
+        ) {
+
+          save.cats += 1;
+          save.score += 100;
+          save.coins += 5;
+
+          showMessage(
+            "🐈 Каёко погладила кошку! +100 ⭐"
+          );
+
+          saveGame();
+
+        }
+
+        if (
+          item.type === "photo"
+        ) {
+
+          save.photos += 1;
+          save.score += 150;
+          save.coins += 10;
+
+          showMessage(
+            "📸 Каёко сделала фотографию! +150 ⭐"
+          );
+
+          saveGame();
+
+        }
+
+        updateHUD();
+
+        break;
+
+      }
+
+    }
+
+  }
+
+  // ------------------------------------------
+  // КАМЕРА
+  // ------------------------------------------
+
+  function updateCamera() {
+
+    const target =
+      new THREE.Vector3(
+        kayoko.position.x,
+        3,
+        kayoko.position.z
+      );
+
+    const desired =
+      new THREE.Vector3(
+        kayoko.position.x,
+        7,
+        kayoko.position.z + 10
+      );
+
+    camera.position.lerp(
+      desired,
+      0.08
+    );
+
+    camera.lookAt(
+      target
+    );
+
+  }
+
+  // ------------------------------------------
+  // HUD
+  // ------------------------------------------
+
+  function updateHUD() {
+
+    const score =
+      document.getElementById(
+        "score"
+      );
+
+    const cats =
+      document.getElementById(
+        "cats"
+      );
+
+    const photos =
+      document.getElementById(
+        "photos"
+      );
+
+    const coins =
+      document.getElementById(
+        "coins"
+      );
+
+    if (score)
+      score.textContent =
+        save.score;
+
+    if (cats)
+      cats.textContent =
+        save.cats;
+
+    if (photos)
+      photos.textContent =
+        save.photos;
+
+    if (coins)
+      coins.textContent =
+        save.coins;
+
+  }
+
+  // ------------------------------------------
+  // НОВАЯ ПРОГУЛКА
+  // ------------------------------------------
+
+  const newWalk =
     document.getElementById(
-      "loading"
+      "newWalk"
     );
 
-  if (loading) {
-    loading.classList.add(
-      "hidden"
+  if (newWalk) {
+
+    newWalk.addEventListener(
+      "click",
+      function () {
+
+        save = {
+          score: 0,
+          cats: 0,
+          photos: 0,
+          coins: 0
+        };
+
+        saveGame();
+        updateHUD();
+
+        kayoko.position.set(
+          0,
+          0,
+          5
+        );
+
+        showMessage(
+          "🌸 Новая прогулка началась!"
+        );
+
+      }
     );
+
   }
 
-}, 700);
+  // ------------------------------------------
+  // RESIZE
+  // ------------------------------------------
 
-// ==========================================
-// ИГРОВОЙ ЦИКЛ
-// ==========================================
+  window.addEventListener(
+    "resize",
+    function () {
 
-function animate() {
+      camera.aspect =
+        window.innerWidth /
+        window.innerHeight;
 
-  requestAnimationFrame(
-    animate
+      camera.updateProjectionMatrix();
+
+      renderer.setSize(
+        window.innerWidth,
+        window.innerHeight
+      );
+
+    }
   );
 
-  const dt =
-    Math.min(
-      clock.getDelta(),
-      0.05
+  // ------------------------------------------
+  // HUD
+  // ------------------------------------------
+
+  updateHUD();
+
+  // ------------------------------------------
+  // ЗАГРУЗКА ЗАВЕРШЕНА
+  // ------------------------------------------
+
+  setTimeout(
+    function () {
+
+      if (loading) {
+
+        loading.classList.add(
+          "hidden"
+        );
+
+      }
+
+    },
+    700
+  );
+
+  // ------------------------------------------
+  // ИГРОВОЙ ЦИКЛ
+  // ------------------------------------------
+
+  function animate() {
+
+    requestAnimationFrame(
+      animate
     );
 
-  move(dt);
+    const dt =
+      Math.min(
+        clock.getDelta(),
+        0.05
+      );
 
-  interact();
+    move(dt);
 
-  updateCamera();
+    interact();
 
-  renderer.render(
-    scene,
-    camera
-  );
-}
+    updateCamera();
 
-// ==========================================
-// ЗАПУСК
-// ==========================================
+    renderer.render(
+      scene,
+      camera
+    );
 
-animate();
+  }
+
+  animate();
+
+})();
