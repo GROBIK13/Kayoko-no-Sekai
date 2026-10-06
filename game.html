@@ -16,13 +16,10 @@
 
 <body>
 
-  <!-- Загрузка -->
   <div id="loading">
     🌸 Загружаем Токио…
   </div>
 
-
-  <!-- HUD -->
   <div id="hud">
 
     <div class="panel">
@@ -31,77 +28,42 @@
     </div>
 
     <div class="panel stats">
-
       ⭐ <span id="score">0</span>
-
       🐈 <span id="cats">0</span>
-
       📸 <span id="photos">0</span>
-
       💰 <span id="coins">0</span>
-
     </div>
 
   </div>
 
-
-  <!-- Сообщения -->
   <div id="message"></div>
 
-
-  <!-- Подсказка -->
   <div id="help">
-
     <b>Управление</b><br>
-
     WASD / стрелки — ходьба<br>
-
     E — взаимодействие
-
   </div>
 
-
-  <!-- Новая прогулка -->
   <button id="newWalk">
     ↻ Новая прогулка
   </button>
 
-
-  <!-- Мобильное управление -->
   <div id="mobileControls">
 
-    <button data-key="ArrowUp">
-      ▲
-    </button>
+    <button data-key="ArrowUp">▲</button>
 
     <div>
-
-      <button data-key="ArrowLeft">
-        ◀
-      </button>
-
-      <button data-key="ArrowDown">
-        ▼
-      </button>
-
-      <button data-key="ArrowRight">
-        ▶
-      </button>
-
+      <button data-key="ArrowLeft">◀</button>
+      <button data-key="ArrowDown">▼</button>
+      <button data-key="ArrowRight">▶</button>
     </div>
 
   </div>
 
+  <!-- Three.js -->
+  <script src="https://unpkg.com/three@0.180.0/build/three.min.js"></script>
 
-  <!--
-    Three.js загружается ЛОКАЛЬНО.
-    Файл должен находиться:
-    js/three.min.js
-  -->
-
-  <script src="js/three.min.js"></script>
-
-  <!-- Основной код игры -->
+  <!-- Игра -->
   <script src="game.js"></script>
 
 </body>
