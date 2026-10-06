@@ -3,9 +3,10 @@
 // Полная версия game.js
 // ==========================================
 
+console.log("KAYOKO GAME JS ЗАПУЩЕН");
+
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xbfe2ec);
-scene.fog = new THREE.Fog(0xbfe2ec, 70, 210);
 
 const camera = new THREE.PerspectiveCamera(
   55,
